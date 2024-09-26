@@ -3,9 +3,12 @@ import {
   createAsyncStore,
   useSubmission,
   useSubmissions,
-  type RouteSectionProps
+  type RouteSectionProps,
+  cache,
+  createAsync
 } from "@solidjs/router";
 import { For, Show, createMemo, createSignal } from "solid-js";
+import { getRequestEvent } from "solid-js/web";
 import { CompleteIcon, IncompleteIcon } from "~/components/icons";
 import {
   addTodo,
@@ -27,14 +30,22 @@ declare module "solid-js" {
 }
 const setFocus = (el: HTMLElement) => setTimeout(() => el.focus());
 
+const getCookie = cache(async () => {
+  "use server";
+  const cookie = getRequestEvent()!.request.headers.get("Cookie");
+  return cookie;
+}, "cookie");
+
 export const route = {
   preload() {
     getTodos();
+    getCookie();
   }
 } satisfies RouteDefinition;
 
 export default function TodoApp(props: RouteSectionProps) {
   const todos = createAsyncStore(() => getTodos(), { initialValue: [], deferStream: true });
+  const cookie = createAsync(async () => await getCookie());
   const location = props.location;
 
   const addingTodo = useSubmissions(addTodo);
@@ -63,6 +74,7 @@ export default function TodoApp(props: RouteSectionProps) {
     <section class="todoapp">
       <header class="header">
         <h1>todos</h1>
+        <h2>{cookie()}</h2>
         <form
           action={addTodo}
           method="post"
