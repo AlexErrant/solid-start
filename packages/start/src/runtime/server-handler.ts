@@ -283,7 +283,8 @@ async function handleSingleFlight(sourceEvent: FetchEvent, result: any): Promise
     /* @ts-ignore */
     App || (App = (await import("#start/app")).default);
     /* @ts-ignore */
-    event.router.dataOnly = revalidate || true;
+    event.router.dataOnly =
+      revalidate || sourceEvent.request.headers.get("Cookie") == null ? true : [""];
     /* @ts-ignore */
     event.router.previousUrl = sourceEvent.request.headers.get("referer");
     try {
